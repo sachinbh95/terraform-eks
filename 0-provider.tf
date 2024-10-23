@@ -1,8 +1,7 @@
 provider "aws" {
   region = "us-east-1"
-  profile = "developer"
+  profile = "${var.profile}"
 }
-
 terraform {
   required_providers {
     aws = {
