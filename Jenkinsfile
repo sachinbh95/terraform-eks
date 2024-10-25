@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     // Checkout the code from the repository
-                    git "https://github.com/sachinbh95/terraform-eks.git"
+                    git branch: 'main', url: 'https://github.com/sachinbh95/terraform-eks.git'
                 }
             }
         }
@@ -37,7 +37,8 @@ pipeline {
             steps {
                 script {
                     // Plan the terraform
-                    sh 'terraform plan'
+                    sh 'terraform plan -out tfplan'
+                    sh 'terraform show -no-color tfplan > tfplan.txt'
                 }
             }
         }
