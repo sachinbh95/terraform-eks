@@ -1,8 +1,9 @@
 pipeline {
 
     parameters {
-       booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+       booleanParam(name: 'autoApprove', defaultValue: true, description: 'Automatically run apply after generating plan?')
        choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
+       booleanParam(name: 'skipPipeline', defaultValue: true, description: 'Skip this pipeline and trigger the downstream pipeline?')
     }
 
     environment {
@@ -15,7 +16,26 @@ pipeline {
     agent any
 
     stages {
+
+        stage('Check Skip Pipeline') {
+            steps {
+                script {
+                    if (params.skipPipeline) {
+                        echo 'Skipping this pipeline and triggering the downstream pipeline...'
+                        build job: 'Deploy-Docker-To-EKS'
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                }
+            }
+        }
+
         stage('checkout') {
+
+            when {
+                expression { !params.skipPipeline }
+            }
+
             steps {
                 script {
                     // Checkout the code from the repository
@@ -25,6 +45,11 @@ pipeline {
         }
 
         stage('terraform init') {
+
+            when {
+                expression { !params.skipPipeline }
+            }
+
             steps {
                 script {
                     // Initialize the terraform
@@ -34,6 +59,11 @@ pipeline {
         }
 
         stage('terraform plan') {
+
+            when {
+                expression { !params.skipPipeline }
+            }
+
             steps {
                 script {
                     // Plan the terraform
@@ -44,6 +74,11 @@ pipeline {
         }
 
         stage('Apply / Destroy') {
+
+            when {
+                expression { !params.skipPipeline }
+            }
+
             steps {
                 script {
                     if (params.action == 'apply') {
@@ -59,6 +94,17 @@ pipeline {
                     } else {
                         error "Invalid action selected. Please choose either 'apply' or 'destroy'."
                     }
+                }
+            }
+        }
+
+            stage('Trigger Downstream Deployment') {
+            when {
+                expression { !params.skipPipeline && params.action == 'apply' }
+            }
+            steps {
+                script {
+                    build job: "cloud-deploy-eks", wait: true
                 }
             }
         }
