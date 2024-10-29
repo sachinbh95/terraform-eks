@@ -1,7 +1,7 @@
 pipeline {
 
     parameters {
-       booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+       booleanParam(name: 'autoApprove', defaultValue: true, description: 'Automatically run apply after generating plan?')
        choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
     }
 
@@ -62,5 +62,16 @@ pipeline {
                 }
             }
         }
+            
+        stage('Trigger Cloud Deployment') {
+            steps {
+                script {
+                    if (params.action == 'apply') {
+                        build job: "cloud-deploy-eks", wait: true
+                    }
+                }
+            }
+        }
+
     }
 }
