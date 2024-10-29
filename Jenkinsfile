@@ -32,10 +32,6 @@ pipeline {
 
         stage('checkout') {
 
-            when {
-                expression { !params.skipPipeline }
-            }
-
             steps {
                 script {
                     // Checkout the code from the repository
