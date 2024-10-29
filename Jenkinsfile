@@ -22,7 +22,7 @@ pipeline {
                 script {
                     if (params.skipPipeline) {
                         echo 'Skipping this pipeline and triggering the downstream pipeline...'
-                        build job: 'Deploy-Docker-To-EKS'
+                        build job: "cloud-deploy-eks", wait: true
                         currentBuild.result = 'SUCCESS'
                         return
                     }
